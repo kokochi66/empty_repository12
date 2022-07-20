@@ -10,14 +10,15 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@RestController
+@Controller
 @Slf4j
 public class HomeController {
 
 
     @RequestMapping(value = "/", method = RequestMethod.GET)
     public String home(HttpServletResponse response, HttpServletRequest request) {
-        return "home";
+        log.info("/ - main index");
+        return "index";
     }
 
     @GetMapping(value = "/api/hello")
