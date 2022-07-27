@@ -31,6 +31,7 @@ public class Music {
     private String title;
     private String vocal;
     private String composition;
+    private Float volume;
     private MusicType musicType;
 
     @Transient
@@ -39,4 +40,6 @@ public class Music {
     private MultipartFile musicFile;
     @Transient
     private MultipartFile musicMainImg;
+    @Transient
+    private Integer highlight;
 }

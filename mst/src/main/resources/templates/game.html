@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>월드컵 시작합니다</title>
+</head>
+<body>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+
+    #wrap {
+        width: 80vw;
+        height: 60vh;
+        border: 1px solid #db4646;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: none;
+    }
+
+    #wrap.gameStart {
+        display: block;
+    }
+
+    #leftComp {
+        background-color: #358bae;
+        top: 0;
+        left: 0;
+    }
+
+
+    #leftComp:hover {
+        background-color: #1c4a5c;
+    }
+
+    #rightComp {
+        top: 0;
+        right: 0;
+        background-color: #beb631;
+    }
+
+
+    #rightComp:hover {
+        background-color: #5d591a;
+    }
+
+    .comp {
+        width: 50%;
+        height: 100%;
+        display: none;
+        position: absolute;
+    }
+
+    .comp.onload {
+        display: block;
+    }
+
+    .title {
+        text-align: center;
+    }
+
+</style>
+
+<h2>남은 개수 <span id="playListSize"></span></h2>
+<div id="wrap">
+    <div id="leftComp" class="comp">
+        <img id="leftMainImg" src="" alt="">
+        <h4 id="leftTitle" class="title">leftTitle</h4>
+        <button id="leftInit" type="button">처음부터</button>
+        <button id="leftHighlight" type="button">하이라이트</button>
+        <button id="leftWin" type="button">승리</button>
+    </div>
+    <div id="rightComp" class="comp">
+        <img id="rightMainImg" src="" alt="">
+        <h4 id="rightTitle" class="title">rightTitle</h4>
+        <button id="rightInit" type="button">처음부터</button>
+        <button id="rightHighlight" type="button">하이라이트</button>
+        <button id="rightWin" type="button">승리</button>
+    </div>
+</div>
+
+<script src="/js/howler.js"></script>
+<script>
+    window.onload = function () {
+
+        let playList = [];
+        let nextPlayList = [];
+        let wrapBlock = document.getElementById('wrap');
+        let leftBlock = document.getElementById('leftComp');
+        let rightBlock = document.getElementById('rightComp');
+
+        let leftMusic;
+        let rightMusic;
+
+        let playerFlag = false;
+        let gameStartFlag = false;
+
+        let playListSize = document.getElementById('playListSize');
+
+        fetch('/game/getData', {method: 'get'})
+            .then((response) => response.json())
+            .then(data => {
+                playList = shuffleArray(data);
+                console.log(playList);
+                wrapBlock.classList.add('gameStart');
+                playListSize.innerText = playList.length;
+                nextPlay('start');
+            })
+            .catch(err => { // 오류 발생시 오류를 담아서 보여줌
+                console.log('Fetch Error', err);
+            });
+
+        function shuffleArray(array) {
+            for (var i = array.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var temp = array[i];
+                array[i] = array[j];
+                array[j] = temp;
+            }
+            return array;
+        }
+
+
+        function nextPlay(cause) {
+            console.log('cause ', cause);
+            playListSize.innerText = playList.length + nextPlayList.length;
+            if (playList.length <= 1) {
+                while (nextPlayList.length) {
+                    playList.push(nextPlayList.shift());
+                }
+                if (playList.length <= 1) {
+                    alert('게임이 종료되었습니다.');
+                    console.log('game END playList', playList)
+                    let winner = playList.shift();
+                    let winMusic = new Howl({
+                        src: ["/file/" + winner.contentFileList[0].fileSrc],
+                        onload: () => {
+                            winMusic.seek(winner.contentFileList[0].highlight);
+                            winMusic.play();
+                        }
+                    });
+                    return false;
+                } else {
+                    nextPlay('gameReset');
+                }
+            } else {
+                setTimeout(function() {
+
+                    console.log('playList', playList);
+                    console.log('nextPlayList', nextPlayList);
+                    let left = playList.shift();
+                    let right = playList.shift();
+                    console.log('left', left);
+                    console.log('right', right)
+
+                    let nLeftBlock = leftBlock.cloneNode(true);
+                    let nRightBlock = rightBlock.cloneNode(true);
+                    leftBlock.remove();
+                    rightBlock.remove();
+                    wrapBlock.appendChild(nLeftBlock);
+                    wrapBlock.appendChild(nRightBlock);
+                    leftBlock = document.getElementById('leftComp');
+                    rightBlock = document.getElementById('rightComp');
+                    let leftTitle = document.getElementById('leftTitle');
+                    let rightTitle = document.getElementById('rightTitle');
+
+                    let leftInitBtn = document.getElementById('leftInit')
+                    let rightInitBtn = document.getElementById('rightInit')
+                    let leftHighlightBtn = document.getElementById('leftHighlight')
+                    let rightHighlightBtn = document.getElementById('rightHighlight')
+
+                    let leftWinBtn = document.getElementById('leftWin')
+                    let rightWinBtn = document.getElementById('rightWin');
+
+                    leftMusic = new Howl({
+                        src: ["/file/" + left.contentFileList[0].fileSrc],
+                        onload: () => {
+                            leftBlock.classList.add('onload');
+                            leftTitle.innerText = left.title;
+                            leftMusic.seek(left.contentFileList[0].highlight);
+                            leftWinBtn.addEventListener('click', () => {
+                                nextPlayList.push(left);
+                                leftMusic.stop();
+                                leftBlock.classList.remove('onload');
+                                rightBlock.classList.remove('onload');
+                                nextPlay('left win');
+                            });
+                            leftBlock.addEventListener('mousemove', () => {
+                                if (!playerFlag) {
+                                    leftMusic.play();
+                                    playerFlag = true;
+                                }
+                            });
+                            leftBlock.addEventListener('mouseleave', () => {
+                                leftMusic.pause();
+                                playerFlag = false;
+                            });
+                            leftInitBtn.addEventListener('click', () => {
+                                leftMusic.seek(0);
+                            });
+                            leftHighlightBtn.addEventListener('click', () => {
+                                leftMusic.seek(left.contentFileList[0].highlight);
+                            });
+                        }
+                    });
+
+                    rightMusic = new Howl({
+                        src: ["/file/" + right.contentFileList[0].fileSrc],
+                        onload: () => {
+                            rightBlock.classList.add('onload');
+                            rightTitle.innerText = right.title;
+                            rightMusic.seek(right.contentFileList[0].highlight);
+                            rightWinBtn.addEventListener('click', () => {
+                                nextPlayList.push(right);
+                                rightMusic.stop();
+                                leftBlock.classList.remove('onload');
+                                rightBlock.classList.remove('onload');
+                                nextPlay('right win');
+                            });
+                            rightBlock.addEventListener('mousemove', (e) => {
+                                if (!playerFlag) {
+                                    rightMusic.play();
+                                    playerFlag = true;
+                                }
+                            });
+                            rightBlock.addEventListener('mouseleave', (e) => {
+                                rightMusic.pause();
+                                playerFlag = false;
+                            });
+                            rightInitBtn.addEventListener('click', () => {
+                                rightMusic.seek(0);
+                            });
+                            rightHighlightBtn.addEventListener('click', () => {
+                                rightMusic.seek(right.contentFileList[0].highlight);
+                            });
+                        }
+                    });
+
+                    gameStartFlag = true;
+                    console.log('next play setting');
+                }, 1500);
+            }
+
+        }
+    }
+</script>
+
+
+</body>
+</html>

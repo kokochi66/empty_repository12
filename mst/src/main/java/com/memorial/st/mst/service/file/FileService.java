@@ -1,6 +1,8 @@
 package com.memorial.st.mst.service.file;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Service;
@@ -18,9 +20,11 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class FileService {
 
     private static String uploadPath;
@@ -30,21 +34,23 @@ public class FileService {
         try {
             ClassLoader classLoader = getClass().getClassLoader();
             URI uri = classLoader.getResource(".").toURI();
-            uploadPath = Paths.get(uri).toString() + "/uploads";
+            uploadPath = Paths.get(uri) + "/static/files";
             Files.createDirectories(Paths.get(uploadPath));
         } catch (IOException | URISyntaxException e) {
             throw new RuntimeException("Could not create upload folder!");
         }
     }
 
-    public void save(MultipartFile file) {
+    public String save(MultipartFile file) {
         try {
             Path root = Paths.get(uploadPath);
             if (!Files.exists(root)) {
                 init();
             }
-            System.out.println("TEST :: " + root.toString());
-            Files.copy(file.getInputStream(), root.resolve(file.getOriginalFilename()));
+            log.info("TEST :: root = " + root.toString());
+            String fileName = UUID.randomUUID() + "_" + file.getOriginalFilename();
+            Files.copy(file.getInputStream(), root.resolve(fileName));
+            return fileName;
         } catch (Exception e) {
             throw new RuntimeException("Could not store the file. Error: " + e.getMessage());
         }
@@ -69,6 +75,10 @@ public class FileService {
     public void deleteAll() {
         FileSystemUtils.deleteRecursively(Paths.get(uploadPath)
                 .toFile());
+    }
+
+    public void deleteByFileName(String fileName) {
+
     }
 
     public List<Path> loadAll() {
