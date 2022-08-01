@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+
+    <th:block th:fragment="configFragment">
+        <link rel="stylesheet" href="/css/bootstrap.min.css">
+        <link rel="stylesheet" href="/fontawesome/css/all.min.css">
+        <link rel="stylesheet" href="/css/templatemo-style.css">
+
+        <script src="/js/plugins.js"></script>
+        <script>
+            $(window).on("load", function() {
+                $('body').addClass('loaded');
+            });
+        </script>
+    </th:block>
+
+</html>
