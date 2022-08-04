@@ -7,15 +7,15 @@
     <meta name="viewport"
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-<!--    <title>Document</title>-->
-<!--    <th:block th:replace="config::configFragment"></th:block>-->
+    <title>Document</title>
+    <th:block th:replace="~{layout/config::configFragment}"></th:block>
 </head>
 <body>
-    <div th:replace="header :: headerFragment"></div>
-    <h2>테스트용 제목</h2>
+<div th:replace="~{layout/header::headerFragment}"></div>
+<h2>테스트용 제목</h2>
 
-    <div layout:fragment="content"></div>
+<div layout:fragment="content"></div>
 
-<!--    <footer th:replace="footer::footerFragment"></footer>-->
+<footer th:replace="~{layout/footer::footerFragment}"></footer>
 </body>
 </html>
